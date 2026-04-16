@@ -1,13 +1,12 @@
-# NestJS Product Microservice CRUD API
+# NestJS Product Serverless API
 
-A minimal NestJS microservice that exposes Product CRUD operations over TCP transport and persists data in MongoDB Atlas.
+A NestJS CRUD API for products, designed for Google Cloud Functions with MongoDB Atlas.
 
-## Architecture
+## What Changed
 
-- NestJS microservice application
-- HTTP REST API on port `3000`
-- TCP transport on port `3001`
-- Modular Product feature module
+- HTTP-only backend for serverless deployment
+- Google Cloud Functions entry point in `src/index.ts`
+- Shared Nest bootstrap for local dev and Cloud Functions
 - MongoDB Atlas via Mongoose
 - DTO validation with `class-validator`
 
@@ -24,6 +23,8 @@ MONGODB_URI=your-mongodb-atlas-connection-string
 ```text
 src/
   app.module.ts
+  http-app.ts
+  index.ts
   main.ts
   products/
     dto/
@@ -34,57 +35,45 @@ src/
       product.entity.ts
     schemas/
       product.schema.ts
-    product.controller.ts
+    product.http.controller.ts
     product.service.ts
     product.module.ts
 ```
 
-## Run the service
+## Run Locally
 
-**Local development:**
 ```bash
 npm install
 npm run start:dev
 ```
 
-**Production build:**
-```bash
-npm install
-npm start
-```
+The local app listens on `http://localhost:3000/api`.
 
-By default, the HTTP API listens on `http://localhost:3000` and the TCP microservice listens on `127.0.0.1:3001`.
+## Google Cloud Functions Deployment
 
-## Google Cloud Run Deployment
-
-Set the `MONGODB_URI` environment variable in Cloud Run, then deploy:
+Deploy the HTTP function entry point named `productsApi`:
 
 ```bash
-gcloud run deploy nestjs-product-api \
-  --source . \
+gcloud functions deploy productsApi \
+  --gen2 \
   --runtime nodejs18 \
-  --port 3000 \
+  --region us-central1 \
+  --source . \
+  --entry-point productsApi \
+  --trigger-http \
   --allow-unauthenticated \
   --set-env-vars MONGODB_URI=<your-mongodb-atlas-uri>
 ```
 
-The `postinstall` script automatically builds the project during deployment.
+The function URL returned by Google Cloud is the URL you use in Postman.
 
-## REST URLs for Postman
+## REST Endpoints
 
-- `POST http://127.0.0.1:3000/products`
-- `GET http://127.0.0.1:3000/products`
-- `GET http://127.0.0.1:3000/products/:id`
-- `PATCH http://127.0.0.1:3000/products/:id`
-- `DELETE http://127.0.0.1:3000/products/:id`
-
-## Message Patterns
-
-- `product.create`
-- `product.find-all`
-- `product.find-one`
-- `product.update`
-- `product.delete`
+- `POST /api/products`
+- `GET /api/products`
+- `GET /api/products/:id`
+- `PATCH /api/products/:id`
+- `DELETE /api/products/:id`
 
 ## Sample Request Payloads
 
@@ -130,28 +119,7 @@ The `postinstall` script automatically builds the project during deployment.
 }
 ```
 
-## TCP Client Script
+## Notes
 
-Run the Node client to exercise the TCP message patterns end to end:
-
-```bash
-npm run tcp:client
-```
-
-It will create, list, fetch, update, and delete a product using the microservice transport.
-
-## Example TCP Client Usage
-
-```ts
-import { ClientProxyFactory, Transport } from '@nestjs/microservices';
-
-const client = ClientProxyFactory.create({
-  transport: Transport.TCP,
-  options: {
-    host: '127.0.0.1',
-    port: 3001,
-  },
-});
-
-client.send('product.find-all', {}).subscribe(console.log);
-```
+- The app reuses a cached Nest instance between Cloud Function invocations.
+- MongoDB connection pooling is kept small because Cloud Functions are stateless and scale horizontally.

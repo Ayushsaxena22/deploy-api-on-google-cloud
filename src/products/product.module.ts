@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ProductController } from './product.controller';
 import { ProductHttpController } from './product.http.controller';
 import { ProductSchema, ProductSchemaName } from './schemas/product.schema';
 import { ProductService } from './product.service';
@@ -11,7 +10,7 @@ import { ProductService } from './product.service';
       { name: ProductSchemaName, schema: ProductSchema },
     ]),
   ],
-  controllers: [ProductController, ProductHttpController],
+  controllers: [ProductHttpController],
   providers: [ProductService],
 })
 export class ProductModule {}

@@ -17,6 +17,13 @@ import { ProductModule } from './products/product.module';
 
         return {
           uri: mongodbUri,
+          // Stateless runtimes should keep pools small and release idle sockets quickly.
+          maxPoolSize: 5,
+          minPoolSize: 0,
+          maxIdleTimeMS: 30000,
+          connectTimeoutMS: 10000,
+          serverSelectionTimeoutMS: 5000,
+          socketTimeoutMS: 30000,
         };
       },
     }),
