@@ -41,12 +41,34 @@ src/
 
 ## Run the service
 
+**Local development:**
 ```bash
 npm install
 npm run start:dev
 ```
 
-By default, the HTTP API listens on `127.0.0.1:3000` and the TCP microservice listens on `127.0.0.1:3001`.
+**Production build:**
+```bash
+npm install
+npm start
+```
+
+By default, the HTTP API listens on `http://localhost:3000` and the TCP microservice listens on `127.0.0.1:3001`.
+
+## Google Cloud Run Deployment
+
+Set the `MONGODB_URI` environment variable in Cloud Run, then deploy:
+
+```bash
+gcloud run deploy nestjs-product-api \
+  --source . \
+  --runtime nodejs18 \
+  --port 3000 \
+  --allow-unauthenticated \
+  --set-env-vars MONGODB_URI=<your-mongodb-atlas-uri>
+```
+
+The `postinstall` script automatically builds the project during deployment.
 
 ## REST URLs for Postman
 
